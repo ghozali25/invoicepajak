@@ -98,7 +98,7 @@ export default function App() {
           <section className="space-y-4">
             <BrandingSection
               branding={invoice.branding || {}}
-              update={(branding) => update({ branding })}
+              onChange={(branding) => update({ branding })}
             />
             <InvoiceForm invoice={invoice} update={update} totals={totals} />
           </section>

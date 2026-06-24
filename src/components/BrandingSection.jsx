@@ -1,22 +1,31 @@
 import React from 'react'
 import { Image as ImageIcon, X } from 'lucide-react'
 
-const MAX_LOGO_BYTES = 250_000 // 250KB — biar PDF & state gak berat
+const MAX_LOGO_BYTES = 2_000_000 // 2MB — fleksibel buat logo PNG/JPG asli
 
 export default function BrandingSection({ branding, onChange }) {
-  const set = (patch) => onChange({ ...branding, ...patch })
+  const set = (patch) => {
+    if (typeof onChange !== 'function') {
+      console.error('[BrandingSection] onChange prop tidak diterima! branding:', patch)
+      return
+    }
+    onChange({ ...branding, ...patch })
+  }
 
   const onPickLogo = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > MAX_LOGO_BYTES) {
-      alert(`Logo terlalu besar (${(file.size / 1024).toFixed(0)} KB). Maksimal ${MAX_LOGO_BYTES / 1000} KB.`)
+      alert(`Logo terlalu besar (${(file.size / 1024 / 1024).toFixed(2)} MB). Maksimal ${MAX_LOGO_BYTES / 1_000_000} MB.`)
       e.target.value = ''
       return
     }
     const reader = new FileReader()
-    reader.onload = () => set({ logoDataUrl: reader.result })
-    reader.onerror = () => alert('Gagal membaca file logo.')
+    reader.onload = () => {
+      console.log('[BrandingSection] logo loaded', file.name, file.type, `${(file.size / 1024).toFixed(0)}KB`)
+      set({ logoDataUrl: reader.result })
+    }
+    reader.onerror = () => alert('Gagal membaca file logo: ' + (reader.error?.message || 'unknown'))
     reader.readAsDataURL(file)
   }
 
@@ -73,7 +82,7 @@ export default function BrandingSection({ branding, onChange }) {
             onChange={(e) => set({ brandName: e.target.value })}
           />
           <p className="mt-1 text-[11px] text-slate-400">
-            Jika kosong, header akan pakai nama penjual. Logo: PNG/JPG/SVG, maks {MAX_LOGO_BYTES / 1000} KB.
+            Jika kosong, header akan pakai nama penjual. Logo: PNG/JPG/SVG, maks {MAX_LOGO_BYTES / 1_000_000} MB.
           </p>
         </div>
       </div>
