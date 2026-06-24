@@ -20,23 +20,36 @@ export async function generateInvoicePdf(invoice, totals) {
   const W = doc.internal.pageSize.getWidth()
   const M = 15 // margin
   let y = M
+  const branding = invoice.branding || {}
+  const brandName = (branding.brandName || '').trim() || invoice.seller.name || ''
+  const logo = branding.logoDataUrl || ''
 
   // ===== Header =====
-  doc.setFillColor(BRAND)
-  doc.roundedRect(M, y, 10, 10, 2, 2, 'F')
-  doc.setTextColor('#ffffff')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('IP', M + 5, y + 6.5, { align: 'center' })
-
-  doc.setTextColor(TEXT)
-  doc.setFontSize(18)
-  doc.text('INVOICE', M + 14, y + 6)
-
-  doc.setTextColor(MUTED)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
-  doc.text('InvoicePajak', M + 14, y + 10.5)
+  if (logo) {
+    // Render user logo (PNG/JPG/SVG-as-data-url)
+    try {
+      const fmt = logo.startsWith('data:image/png') ? 'PNG'
+        : logo.startsWith('data:image/jpeg') || logo.startsWith('data:image/jpg') ? 'JPEG'
+        : null
+      if (fmt) {
+        doc.addImage(logo, fmt, M, y, 12, 12, undefined, 'FAST')
+      }
+      // Brand name next to logo
+      doc.setTextColor(TEXT)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+      doc.text(doc.splitTextToSize(brandName, 80), M + 15, y + 5)
+      doc.setTextColor(BRAND)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.text('INVOICE', M + 15, y + 10)
+    } catch {
+      // fallback kalau logo gagal render
+      renderDefaultHeader(doc, M, y, brandName)
+    }
+  } else {
+    renderDefaultHeader(doc, M, y, brandName)
+  }
 
   // Right: invoice meta
   doc.setTextColor(TEXT)
@@ -201,4 +214,32 @@ function hex(h) {
 }
 function capitalize(s) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
+
+/** Render header default (badge IP) — dipakai kalau user gak upload logo. */
+function renderDefaultHeader(doc, M, y, brandName) {
+  doc.setFillColor(BRAND)
+  doc.roundedRect(M, y, 10, 10, 2, 2, 'F')
+  doc.setTextColor('#ffffff')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.text('IP', M + 5, y + 6.5, { align: 'center' })
+
+  doc.setTextColor(TEXT)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  if (brandName) {
+    doc.text(doc.splitTextToSize(brandName, 80), M + 14, y + 5)
+    doc.setTextColor(BRAND)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text('INVOICE', M + 14, y + 10)
+  } else {
+    doc.setFontSize(18)
+    doc.text('INVOICE', M + 14, y + 6)
+    doc.setTextColor(MUTED)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    doc.text('InvoicePajak', M + 14, y + 10.5)
+  }
 }

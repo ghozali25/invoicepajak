@@ -88,6 +88,40 @@ describe('calcPph', () => {
     expect(calcPph(0, { pph23: true }).total).toBe(0)
     expect(calcPph(dpp, {}).total).toBe(0)
   })
+
+  it('custom PPh: user-defined nama & tarif (input dalam %)', () => {
+    const r = calcPph(dpp, {
+      customPph: [
+        { id: '1', label: 'PPh 21', rate: 2, enabled: true },     // 2% → 20.000
+        { id: '2', label: 'PPh 22 Impor', rate: 2.5, enabled: true }, // 2,5% → 25.000
+      ]
+    })
+    expect(r.custom).toHaveLength(2)
+    expect(r.custom[0].amount).toBe(20_000)
+    expect(r.custom[1].amount).toBe(25_000)
+    expect(r.total).toBe(45_000)
+    expect(r.breakdown).toHaveLength(2)
+    expect(r.breakdown[0].isCustom).toBe(true)
+  })
+
+  it('custom PPh: skip yang disabled atau rate 0', () => {
+    const r = calcPph(dpp, {
+      customPph: [
+        { id: '1', label: 'PPh 21', rate: 5, enabled: false },   // disabled → skip
+        { id: '2', label: 'PPh 22', rate: 0, enabled: true },     // rate 0 → skip
+        { id: '3', label: 'PPh 23', rate: 2, enabled: true },     // active → 20.000
+      ]
+    })
+    expect(r.custom).toHaveLength(1)
+    expect(r.total).toBe(20_000)
+  })
+
+  it('custom PPh: tarif bisa diisi sbg desimal (0.02) atau persen (2) — auto-detect', () => {
+    const r = calcPph(dpp, {
+      customPph: [{ id: '1', label: 'Custom', rate: 0.02, enabled: true }]
+    })
+    expect(r.custom[0].amount).toBe(20_000) // 0.02 × 1jt = 20k (sama kayak 2%)
+  })
 })
 
 describe('computeTotals — integration', () => {

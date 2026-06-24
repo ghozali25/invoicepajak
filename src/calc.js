@@ -51,11 +51,11 @@ export function calcSubtotal(items) {
  * PPh dihitung dari DPP (bukan gross+PPN).
  *
  * @param {number} dpp - Dasar Pengenaan Pajak (hasil calcPpn.dpp)
- * @param {object} cfg - { pph23:boolean, pph22Marketplace:boolean, pphFinal42:'none'|'building'|'land' }
- * @returns {{ pph23:number, pph22:number, pphFinal42:number, total:number, breakdown:Array }}
+ * @param {object} cfg - { pph23:boolean, pph22Marketplace:boolean, pphFinal42:'none'|'building'|'land', customPph?:Array }
+ * @returns {{ pph23:number, pph22:number, pphFinal42:number, custom:Array, total:number, breakdown:Array }}
  */
 export function calcPph(dpp, cfg = {}) {
-  const out = { pph23: 0, pph22: 0, pphFinal42: 0, total: 0, breakdown: [] }
+  const out = { pph23: 0, pph22: 0, pphFinal42: 0, custom: [], total: 0, breakdown: [] }
   if (dpp <= 0) return out
 
   if (cfg.pph23) {
@@ -73,7 +73,24 @@ export function calcPph(dpp, cfg = {}) {
     out.pphFinal42 = round2(dpp * TAX_RATES.pphFinal42Land)
     out.breakdown.push({ label: 'PPh Final 4(2) (7,5%) — sewa tanah', amount: out.pphFinal42 })
   }
-  out.total = round2(out.pph23 + out.pph22 + out.pphFinal42)
+
+  // Custom PPh entries — user-defined (nama + tarif bebas)
+  if (Array.isArray(cfg.customPph)) {
+    for (const cp of cfg.customPph) {
+      if (!cp.enabled) continue
+      const ratePct = Number(cp.rate) || 0
+      if (ratePct === 0) continue
+      // rate bisa diisi sebagai persen (2 = 2%) atau desimal (0.02). Auto-detect: kalau <= 1, treat as fraction.
+      const fraction = ratePct <= 1 ? ratePct : ratePct / 100
+      const amount = round2(dpp * fraction)
+      if (amount <= 0) continue
+      out.custom.push({ id: cp.id, label: cp.label, rate: ratePct, amount })
+      const rateLabel = ratePct <= 1 ? `${(ratePct * 100).toFixed(ratePct * 100 % 1 === 0 ? 0 : 2)}%` : `${ratePct}%`
+      out.breakdown.push({ label: `${cp.label} (${rateLabel})`, amount, isCustom: true })
+    }
+  }
+
+  out.total = round2(out.pph23 + out.pph22 + out.pphFinal42 + out.custom.reduce((s, c) => s + c.amount, 0))
   return out
 }
 
@@ -88,11 +105,12 @@ export function computeTotals(items, taxCfg = {}) {
   const isPkp = taxCfg.isPkp !== false
   const { dpp, ppn } = calcPpn(subtotal, isPkp)
 
-  // Aggregate PPh config: item-type-based defaults + explicit overrides
+  // Aggregate PPh config: item-type-based defaults + explicit overrides + custom PPh
   const cfg = {
     pph23: taxCfg.pph23 ?? items.some(i => i.type === 'jasa'),
     pph22Marketplace: taxCfg.pph22Marketplace ?? items.some(i => i.type === 'barang' && i.isMarketplace),
     pphFinal42: taxCfg.pphFinal42 ?? 'none',
+    customPph: taxCfg.customPph ?? [],
   }
   const pph = calcPph(dpp, cfg)
 

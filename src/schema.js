@@ -19,12 +19,25 @@ export const LineItemSchema = z.object({
   isMarketplace: z.boolean().optional().default(false),
 })
 
+export const CustomPphSchema = z.object({
+  id: z.string(),
+  label: z.string().min(1, 'Nama PPh wajib').max(60),
+  rate: z.coerce.number().min(0).max(1, 'Tarif maks 100% (1.0)').or(z.coerce.number().min(0).max(100)).optional().default(0),
+  enabled: z.boolean().default(true),
+})
+
 export const TaxConfigSchema = z.object({
   isPkp: z.boolean().default(true),
   pph23: z.boolean().default(false),
   pph22Marketplace: z.boolean().default(false),
   pphFinal42: z.enum(['none', 'building', 'land']).default('none'),
+  customPph: z.array(CustomPphSchema).default([]),
 })
+
+export const BrandingSchema = z.object({
+  brandName: z.string().max(80).optional().or(z.literal('')),
+  logoDataUrl: z.string().optional().or(z.literal('')), // base64 data URL (max ~200KB)
+}).partial()
 
 export const InvoiceSchema = z.object({
   invoiceNo: z.string().min(1, 'Nomor invoice wajib'),
@@ -35,6 +48,7 @@ export const InvoiceSchema = z.object({
   items: z.array(LineItemSchema).min(1, 'Minimal 1 item'),
   taxConfig: TaxConfigSchema,
   notes: z.string().max(500).optional().or(z.literal('')),
+  branding: BrandingSchema.default({}),
 })
 
 /** Buat default line item kosong */
@@ -47,6 +61,16 @@ export function emptyItem() {
     unit: 'unit',
     price: 0,
     isMarketplace: false,
+  }
+}
+
+/** Buat default custom PPh entry kosong */
+export function emptyCustomPph() {
+  return {
+    id: cryptoRandom(),
+    label: 'PPh 21',
+    rate: 0, // persen (0-100), di-calc.js di-convert ke fraction
+    enabled: true,
   }
 }
 

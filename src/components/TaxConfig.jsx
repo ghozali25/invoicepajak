@@ -1,8 +1,15 @@
 import React from 'react'
-import { Settings2 } from 'lucide-react'
+import { Settings2, Plus, Trash2 } from 'lucide-react'
+import { emptyCustomPph } from '../schema.js'
 
 export default function TaxConfig({ cfg, onChange }) {
   const set = (patch) => onChange({ ...cfg, ...patch })
+
+  const addCustom = () => set({ customPph: [...(cfg.customPph || []), emptyCustomPph()] })
+  const updateCustom = (id, patch) => set({
+    customPph: (cfg.customPph || []).map(c => c.id === id ? { ...c, ...patch } : c)
+  })
+  const removeCustom = (id) => set({ customPph: (cfg.customPph || []).filter(c => c.id !== id) })
 
   return (
     <div>
@@ -48,6 +55,59 @@ export default function TaxConfig({ cfg, onChange }) {
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Custom PPh — user-defined */}
+      <div className="mt-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">PPh Custom (opsional)</h3>
+            <p className="text-[11px] text-slate-400">Tambah PPh lain dengan nama & tarif bebas. Isi tarif dalam persen (contoh: 2 = 2%).</p>
+          </div>
+          <button onClick={addCustom} className="btn-ghost !py-1.5 !text-xs">
+            <Plus size={14} /> Tambah PPh
+          </button>
+        </div>
+        <div className="space-y-2">
+          {(cfg.customPph || []).map((cp) => (
+            <div key={cp.id} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-brand-600"
+                checked={!!cp.enabled}
+                onChange={(e) => updateCustom(cp.id, { enabled: e.target.checked })}
+                title="Aktif/nonaktifkan PPh ini"
+              />
+              <input
+                className="input flex-1"
+                placeholder="Nama PPh (mis. PPh 21, PPh 22 Impor)"
+                value={cp.label}
+                onChange={(e) => updateCustom(cp.id, { label: e.target.value })}
+              />
+              <div className="relative w-24">
+                <input
+                  type="number" step="any" min="0"
+                  className="input pr-7"
+                  placeholder="0"
+                  value={cp.rate}
+                  onChange={(e) => updateCustom(cp.id, { rate: e.target.value })}
+                />
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">%</span>
+              </div>
+              <button
+                onClick={() => removeCustom(cp.id)}
+                className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30"
+                title="Hapus PPh"
+                aria-label="Hapus PPh custom"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          {(cfg.customPph || []).length === 0 && (
+            <p className="text-[11px] text-slate-400">Belum ada PPh custom. Klik "Tambah PPh" buat nambah PPh 21, PPh 22 impor, PPh 26, dll.</p>
+          )}
         </div>
       </div>
     </div>

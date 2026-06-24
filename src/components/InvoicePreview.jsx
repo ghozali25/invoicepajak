@@ -2,7 +2,9 @@ import React from 'react'
 import { formatIDR, formatDateID, terbilang } from '../format.js'
 
 export default function InvoicePreview({ invoice, totals }) {
-  const { seller, buyer, items, invoiceNo, issueDate, dueDate, notes, taxConfig } = invoice
+  const { seller, buyer, items, invoiceNo, issueDate, dueDate, notes, taxConfig, branding } = invoice
+  const brandName = branding?.brandName?.trim() || seller.name || 'Nama Penjual'
+  const logo = branding?.logoDataUrl || ''
 
   return (
     <div className="card overflow-hidden">
@@ -12,10 +14,15 @@ export default function InvoicePreview({ invoice, totals }) {
       <div className="scale-[0.92] origin-top p-6 print:scale-100">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">IP</div>
-              <span className="text-base font-bold">INVOICE</span>
+          <div className="flex items-center gap-3">
+            {logo ? (
+              <img src={logo} alt="Logo" className="h-12 w-12 rounded-lg object-contain" />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">IP</div>
+            )}
+            <div>
+              <div className="text-base font-bold text-slate-800 dark:text-slate-100">{brandName}</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-brand-600 dark:text-brand-400">INVOICE</div>
             </div>
           </div>
           <div className="text-right">

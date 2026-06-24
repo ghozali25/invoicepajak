@@ -1,6 +1,7 @@
 import React from 'react'
 import { FileText, Download, RotateCcw, Moon, Sun, Github } from 'lucide-react'
 import InvoiceForm from './components/InvoiceForm.jsx'
+import BrandingSection from './components/BrandingSection.jsx'
 import InvoicePreview from './components/InvoicePreview.jsx'
 import { computeTotals } from './calc.js'
 import { InvoiceSchema, emptyItem, defaultInvoiceNo, todayISO } from './schema.js'
@@ -28,8 +29,9 @@ export default function App() {
     seller: { name: '', npwp: '', address: '', city: '' },
     buyer: { name: '', npwp: '', address: '', city: '' },
     items: [{ ...emptyItem(), desc: 'Jasa konsultasi pajak', type: 'jasa', price: 1_120_000 }],
-    taxConfig: { isPkp: true, pph23: true, pph22Marketplace: false, pphFinal42: 'none' },
+    taxConfig: { isPkp: true, pph23: true, pph22Marketplace: false, pphFinal42: 'none', customPph: [] },
     notes: 'Pembayaran via transfer bank dalam 14 hari kerja.',
+    branding: { brandName: '', logoDataUrl: '' },
   }))
 
   // Derived: validation + totals
@@ -49,8 +51,9 @@ export default function App() {
       seller: { name: '', npwp: '', address: '', city: '' },
       buyer: { name: '', npwp: '', address: '', city: '' },
       items: [{ ...emptyItem() }],
-      taxConfig: { isPkp: true, pph23: false, pph22Marketplace: false, pphFinal42: 'none' },
+      taxConfig: { isPkp: true, pph23: false, pph22Marketplace: false, pphFinal42: 'none', customPph: [] },
       notes: '',
+      branding: { brandName: '', logoDataUrl: '' },
     })
   }
 
@@ -93,6 +96,10 @@ export default function App() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* LEFT: Form */}
           <section className="space-y-4">
+            <BrandingSection
+              branding={invoice.branding || {}}
+              update={(branding) => update({ branding })}
+            />
             <InvoiceForm invoice={invoice} update={update} totals={totals} />
           </section>
           {/* RIGHT: Preview */}
