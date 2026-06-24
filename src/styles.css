@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  }
+  .label {
+    @apply block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1;
+  }
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm
+           shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500;
+  }
+  .input:disabled {
+    @apply bg-slate-100 text-slate-400 dark:bg-slate-800/50;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+           transition focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50
+           dark:focus:ring-offset-slate-900;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500;
+  }
+  .btn-ghost {
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+  }
+  .btn-danger {
+    @apply btn border border-rose-300 bg-white text-rose-600 hover:bg-rose-50
+           dark:border-rose-900 dark:bg-slate-900 dark:text-rose-400;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+}
+
+/* Pretty scrollbars */
+* {
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(100,116,139,.4); border-radius: 4px; }
